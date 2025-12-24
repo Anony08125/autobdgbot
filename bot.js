@@ -5,7 +5,7 @@ const express = require('express');
 // CONFIGURATION
 // =======================================================
 const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY';
-const CHANNEL_ID = 'https://t.me/DiuWingiftcode01'; 
+const CHANNEL_ID = '@DiuWingiftcode01'; 
 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
