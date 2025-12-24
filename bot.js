@@ -4,8 +4,8 @@ const express = require('express');
 // =======================================================
 // CONFIGURATION
 // =======================================================
-const token = 'YAHAN_APNA_BOT_TOKEN_PASTE_KAREIN';
-const CHANNEL_ID = '@YourChannelUsername'; 
+const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY';
+const CHANNEL_ID = 'https://t.me/DiuWingiftcode01'; 
 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
