@@ -1,148 +1,109 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
-// 1. Apna Token Yahan Dalein
-const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY'; // Apna Token Replace Karein
+// 1. APNA TOKEN YAHAN DALEIN
+const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY'; 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
-// 2. Apne Channel ki IDs Yahan Dalein
+// 2. CHANNEL ID (Jahan Signal Bhejna Hai)
 const CHANNEL_IDS = [
-    '@DiuWingiftcode01' // Apni Channel ID yahan daalein
+    '@DiuWingiftcode01' // Apni Main Channel ID yahan daalein
 ];
+
+// 3. 🏆 NEW WIN STICKER SETTINGS (Updated)
+// Source: https://t.me/DiuWingiftcode01/633
+const STICKER_CHANNEL_ID = '@DiuWingiftcode01'; // Channel ka Username
+const STICKER_MSG_ID = 633; // Message Number
 
 let lastProcessedPeriod = '';
 
 // ==========================================
-// 🕒 1. PERIOD GENERATOR (17-DIGIT BDG STYLE)
+// 🕒 PERIOD GENERATOR
 // ==========================================
 function getCurrentPeriod() {
     const now = new Date();
-    
-    // BDG uses UTC Time
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const day = String(now.getUTCDate()).padStart(2, '0');
-    
-    // Total Minutes from 00:00 UTC
     const totalMinutes = (now.getUTCHours() * 60) + now.getUTCMinutes();
-    
-    // Sequence Logic: 10001 + Minutes
     const sequence = 10001 + totalMinutes; 
-
-    // Final Format: 20251225 + 1000 + 10001
     return `${year}${month}${day}1000${sequence}`;
 }
 
 // ==========================================
-// 🧠 ULTRA ADVANCED: BDG HASH DECODER & MULTI-PATTERN
+// 🧠 UNIVERSAL PATTERN LOGIC
 // ==========================================
 function getPrediction(period) {
-    // 1. Period ke last 3 digits nikalo (Micro Analysis ke liye)
-    // Example: ...100010742 => "742"
-    const last3 = parseInt(period.slice(-3));
-    const lastDigit = parseInt(period.slice(-1));
-    
-    // 2. Complex Hash Calculation (BDG Server Logic Simulation)
-    // Ye formula period number ko tod-mod kar result nikalta hai
-    const hashValue = (last3 * 7 + lastDigit * 3) % 100;
+    const periodNum = parseInt(period);
+    const wave = Math.sin(periodNum * 0.2);
+    const hash = parseInt(period.slice(-3)) % 100;
 
-    // ==========================================
-    // 🚦 PATTERN SELECTION (Based on Hash)
-    // ==========================================
+    let prediction, emoji, logicText;
 
-    // Pattern 1: DRAGON STREAK (Jab Hash < 20 ho)
-    // Ye lagatar ek hi color dega
-    if (hashValue < 20) {
-        const isDragonBig = (Math.floor(last3 / 10) % 2 === 0);
-        return {
-            name: isDragonBig ? 'BIG' : 'SMALL',
-            emoji: isDragonBig ? '🟢' : '🔴',
-            logic: 'Dragon Streak 🐉 (Strong)'
-        };
-    }
-
-    // Pattern 2: PING-PONG / ZIG-ZAG ( HASH 20 - 40)
-    // Big-Small-Big-Small
-    else if (hashValue >= 20 && hashValue < 40) {
-        if (lastDigit % 2 === 0) {
-            return { name: 'SMALL', emoji: '🔴', logic: 'Ping-Pong 🏓 (B-S-B-S)' };
+    // Pattern Selection (Dragon vs ZigZag)
+    if (Math.abs(wave) > 0.7) {
+        const isBig = wave > 0;
+        prediction = isBig ? 'BIG' : 'SMALL';
+        emoji = isBig ? '🟢' : '🔴';
+        logicText = 'Dragon Streak 🐉';
+    } else {
+        // Ping Pong / Zig Zag
+        if (periodNum % 2 === 0) {
+            prediction = 'SMALL'; emoji = '🔴';
         } else {
-            return { name: 'BIG', emoji: '🟢', logic: 'Ping-Pong 🏓 (B-S-B-S)' };
+            prediction = 'BIG'; emoji = '🟢';
         }
+        logicText = 'Ping Pong 🏓';
     }
 
-    // Pattern 3: AAB PATTERN (2-1 Pattern) (HASH 40 - 60)
-    // Big-Big-Small pattern (Bohot common hai)
-    else if (hashValue >= 40 && hashValue < 60) {
-        const remainder = lastDigit % 3; 
-        // 0,1 = Big, 2 = Small
-        if (remainder === 2) {
-            return { name: 'SMALL', emoji: '🔴', logic: '2-1 Pattern 📊 (AAB)' };
-        } else {
-            return { name: 'BIG', emoji: '🟢', logic: '2-1 Pattern 📊 (AAB)' };
-        }
-    }
-
-    // Pattern 4: TWIN PATTERN (Double-Double) (HASH 60 - 80)
-    // Big-Big-Small-Small
-    else if (hashValue >= 60 && hashValue < 80) {
-        const remainder = lastDigit % 4;
-        if (remainder === 0 || remainder === 1) {
-            return { name: 'SMALL', emoji: '🔴', logic: 'Twin Pattern 👯 (BBSS)' };
-        } else {
-            return { name: 'BIG', emoji: '🟢', logic: 'Twin Pattern 👯 (BBSS)' };
-        }
-    }
-
-    // Pattern 5: 3-2-1 BREAKDOWN (HASH 80+)
-    // Jab trend tootne wala ho
-    else {
-        // Complex modulo for randomizing 'Trend Break'
-        if ((last3 + hashValue) % 2 === 0) {
-             return { name: 'BIG', emoji: '🟢', logic: 'Trend Break 📉 (3-2-1)' };
-        } else {
-             return { name: 'SMALL', emoji: '🔴', logic: 'Trend Break 📉 (3-2-1)' };
-        }
-    }
+    return { name: prediction, emoji: emoji, logic: logicText };
 }
 
 // ==========================================
-// 🚀 3. MAIN LOOP (Interval)
+// 🚀 LOOP: SIGNAL + AUTO WIN
 // ==========================================
 setInterval(() => {
     const currentPeriod = getCurrentPeriod();
 
     if (currentPeriod !== lastProcessedPeriod) {
-        // Naya Period Aaya Hai!
         const result = getPrediction(currentPeriod);
         lastProcessedPeriod = currentPeriod;
 
-        // Message Format (Ab Undefined Nahi Aayega)
+        // 1. SIGNAL MESSAGE
         const message = `
-🤖 *WINGO PREMIUM SIGNAL* 🤖
+🔥 *DiuWin VIP SERVER LEAK* 🔥
 
-⏱ *Time:* 00:00 (Instant)
-📅 *Period:* ${currentPeriod}
+📅 *Period:* \`${currentPeriod}\`
+⏱ *Time:* 00:00 (Live Sync)
 --------------------------------
-🎯 *BET:* ${result.name} ${result.emoji}
+🎯 *SIGNAL:* ${result.name} ${result.emoji}
 --------------------------------
-💡 *Logic:* ${result.logic}
-💰 *Use 5-Stage Funds Plan*
-        `;
+🧠 *Logic:* ${result.logic}
+💰 *Use 5-Stage Investment Plan*
+`;
 
-        // Saare Channels Mein Bhejo
         CHANNEL_IDS.forEach((id) => {
             bot.sendMessage(id, message, { parse_mode: 'Markdown' })
-                .then(() => console.log(`Sent to ${id}`))
-                .catch((e) => console.error(`Failed to send to ${id}:`, e.message));
+                .catch((e) => console.error(`Signal Fail ${id}:`, e.message));
         });
-    }
-}, 1000); // Har 1 second check karega
 
-// ==========================================
-// 🌐 4. SERVER SETUP (Render Ke Liye)
-// ==========================================
-app.get('/', (req, res) => res.send('Ultra-Fast Bot Active 🚀'));
+        // 2. AUTO WIN (50 Seconds Delay) 🏆
+        setTimeout(() => {
+            // 80% Chance to show WIN
+            if (Math.random() < 0.80) {
+                CHANNEL_IDS.forEach((id) => {
+                    // Naya Sticker Forward karega
+                    bot.forwardMessage(id, STICKER_CHANNEL_ID, STICKER_MSG_ID)
+                        .then(() => console.log(`Win (633) sent to ${id}`))
+                        .catch((e) => console.error(`Win Error:`, e.message));
+                });
+            }
+        }, 50000); // 50 Sec baad bheje
+    }
+}, 1000);
+
+// SERVER
+app.get('/', (req, res) => res.send('Bot Active 🚀'));
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Port ${PORT}`));
