@@ -35,51 +35,23 @@ function getCurrentPeriod() {
     return `${year}${month}${day}1000${sequence}`;
 }
 
-function getPrediction(periodNumber) {
-    const currentPeriod = parseInt(periodNumber);
+// ==========================================
+// 🐉 DRAGON CATCHER LOGIC (Trends)
+// ==========================================
+let lastResult = 'BIG 🟢'; // Default start
+
+function getPrediction(period) {
+    // 70% chance ki jo pichle baar aaya, wahi dubara aayega (Dragon Logic)
+    const random = Math.random();
     
-    // Logic wahi rahega (Strong Hybrid Logic)
-    const blockID = Math.floor(currentPeriod / 20) % 4;
-    let activePattern = [];
-    let emoji = "";
-
-    switch(blockID) {
-        case 0:
-            activePattern = [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0];
-            emoji = "🐉 Dragon Trend";
-            break;
-        case 1:
-            activePattern = [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1];
-            emoji = "⚡ ZigZag Mode";
-            break;
-        case 2:
-            activePattern = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-            emoji = "📉 Small Hold";
-            break;
-        case 3:
-            activePattern = [1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1];
-            emoji = "🎲 Mixed Trend";
-            break;
+    if (random > 0.3) {
+        // 70% Same as last (Dragon banayega)
+        return lastResult; 
+    } else {
+        // 30% Flip karega (Trend todega)
+        lastResult = (lastResult === 'BIG 🟢') ? 'SMALL 🔴' : 'BIG 🟢';
+        return lastResult;
     }
-
-    const index = currentPeriod % 20;
-    let rawResult = activePattern[index];
-
-    // Salt / Flip Logic
-    let pStr = String(periodNumber);
-    let digitSum = 0;
-    for(let i=0; i<pStr.length; i++) digitSum += parseInt(pStr[i]);
-
-    if (digitSum % 7 === 0) {
-        rawResult = rawResult === 1 ? 0 : 1;
-        emoji = "⚠️ Market Change";
-    }
-
-    return {
-        result: rawResult === 1 ? 'BIG' : 'SMALL',
-        color: rawResult === 1 ? '🟢' : '🔴',
-        trendEmoji: emoji
-    };
 }
 
 // =======================================================
