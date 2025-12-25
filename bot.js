@@ -10,18 +10,24 @@ const CHANNEL_ID = '@DiuWingiftcode01';
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
-// =======================================================
-// 1. HYBRID LOGIC ENGINE (Fast Calculation)
-// =======================================================
+// ==========================================
+// 🔴 NEW: BDG EXACT SYNC PERIOD LOGIC
+// ==========================================
 function getCurrentPeriod() {
     const now = new Date();
+    
+    // BDG hamesha UTC Time use karta hai (India se 5:30 ghante peeche)
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const day = String(now.getUTCDate()).padStart(2, '0');
+    
+    // Minute Calculation (00:00 se lekar abhi tak kitne minute hue)
     const totalMinutes = (now.getUTCHours() * 60) + now.getUTCMinutes();
     
-    // BDG Logic
+    // BDG Formula: 10001 + Minutes
+    // Example: 00:00 = 10001, 00:01 = 10002
     const sequence = 10001 + totalMinutes;
+    
     return `${year}${month}${day}${sequence}`;
 }
 
