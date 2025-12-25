@@ -8,7 +8,7 @@ const app = express();
 
 // 2. Apne Channel ki IDs Yahan Dalein
 const CHANNEL_IDS = [
-    '@DiuWingiftcode01 @BDGPREDICTION56' // Apni Channel ID yahan daalein
+    '@DiuWingiftcode01' // Apni Channel ID yahan daalein
 ];
 
 let lastProcessedPeriod = '';
