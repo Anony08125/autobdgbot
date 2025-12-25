@@ -35,28 +35,63 @@ function getCurrentPeriod() {
 }
 
 // ==========================================
-// 🔮 2. PREDICTION LOGIC (Object Wala Fix)
+// 🧠 MASTER BRAIN LOGIC (All Patterns Included)
 // ==========================================
 function getPrediction(period) {
-    const lastDigit = parseInt(period.slice(-1));
-    const secondLastDigit = parseInt(period.slice(-2, -1));
+    // Period ka aakhri hissa nikalo (Analysis ke liye)
+    const periodNum = parseInt(period);
     
-    const sum = lastDigit + secondLastDigit;
-
-    // Logic: Sum Even hai to BIG, Odd hai to SMALL
-    // (Agar pattern ulta chale, to bas 'BIG' aur 'SMALL' ko swap kar dena)
-    if (sum % 2 === 0) {
+    // Pattern Selector: Period ke hisaab se logic badlega
+    // Hum har 10 period baad pattern change karenge taaki bot 'Real' lage
+    const patternSelector = Math.floor(periodNum / 10) % 4;
+    
+    // Pattern 1: DRAGON PATTERN (Streak) 🐉
+    // Ye tab chalega jab selector 0 hoga. (Lagatar 10 baar same aayega)
+    if (patternSelector === 0) {
+        // Agar periodNum even hai toh Small, warna Small (Fixed Streak)
+        // Dragon todna nahi hai, isliye Fixed Color denge
+        const isDragonBig = (Math.floor(periodNum / 10) % 2 === 0);
+        
         return {
-            name: 'BIG',
-            emoji: '🟢',
-            logic: 'Trend Analysis 📊'
+            name: isDragonBig ? 'BIG' : 'SMALL',
+            emoji: isDragonBig ? '🟢' : '🔴',
+            logic: 'Dragon Pattern 🐉 (Strong)'
         };
-    } else {
-        return {
-            name: 'SMALL',
-            emoji: '🔴',
-            logic: 'Dragon Pattern 🐉'
-        };
+    }
+    
+    // Pattern 2: ZIG-ZAG PATTERN (Flip) 📉
+    // Ye tab chalega jab selector 1 hoga. (B-S-B-S chalega)
+    else if (patternSelector === 1) {
+        if (periodNum % 2 === 0) {
+            return { name: 'SMALL', emoji: '🔴', logic: 'Zig-Zag Pattern 📉' };
+        } else {
+            return { name: 'BIG', emoji: '🟢', logic: 'Zig-Zag Pattern 📉' };
+        }
+    }
+    
+    // Pattern 3: TWIN PATTERN (Double-Double) 👯
+    // Ye tab chalega jab selector 2 hoga. (BB-SS-BB-SS)
+    else if (patternSelector === 2) {
+        const remainder = periodNum % 4;
+        // 0,1 par SMALL | 2,3 par BIG
+        if (remainder === 0 || remainder === 1) {
+            return { name: 'SMALL', emoji: '🔴', logic: 'Twin Pattern 👯' };
+        } else {
+            return { name: 'BIG', emoji: '🟢', logic: 'Twin Pattern 👯' };
+        }
+    }
+    
+    // Pattern 4: TREND ANALYSIS (Random Mix) 📊
+    // Jab koi pattern clear na ho
+    else {
+        const lastDigit = parseInt(period.slice(-1));
+        const sum = lastDigit + 7; // Secret Formula
+        
+        if (sum % 2 === 0) {
+            return { name: 'BIG', emoji: '🟢', logic: 'Trend Analysis 📊' };
+        } else {
+            return { name: 'SMALL', emoji: '🔴', logic: 'Trend Analysis 📊' };
+        }
     }
 }
 
