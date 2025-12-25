@@ -35,62 +35,74 @@ function getCurrentPeriod() {
 }
 
 // ==========================================
-// 🧠 MASTER BRAIN LOGIC (All Patterns Included)
+// 🧠 ULTRA ADVANCED: BDG HASH DECODER & MULTI-PATTERN
 // ==========================================
 function getPrediction(period) {
-    // Period ka aakhri hissa nikalo (Analysis ke liye)
-    const periodNum = parseInt(period);
+    // 1. Period ke last 3 digits nikalo (Micro Analysis ke liye)
+    // Example: ...100010742 => "742"
+    const last3 = parseInt(period.slice(-3));
+    const lastDigit = parseInt(period.slice(-1));
     
-    // Pattern Selector: Period ke hisaab se logic badlega
-    // Hum har 10 period baad pattern change karenge taaki bot 'Real' lage
-    const patternSelector = Math.floor(periodNum / 10) % 4;
-    
-    // Pattern 1: DRAGON PATTERN (Streak) 🐉
-    // Ye tab chalega jab selector 0 hoga. (Lagatar 10 baar same aayega)
-    if (patternSelector === 0) {
-        // Agar periodNum even hai toh Small, warna Small (Fixed Streak)
-        // Dragon todna nahi hai, isliye Fixed Color denge
-        const isDragonBig = (Math.floor(periodNum / 10) % 2 === 0);
-        
+    // 2. Complex Hash Calculation (BDG Server Logic Simulation)
+    // Ye formula period number ko tod-mod kar result nikalta hai
+    const hashValue = (last3 * 7 + lastDigit * 3) % 100;
+
+    // ==========================================
+    // 🚦 PATTERN SELECTION (Based on Hash)
+    // ==========================================
+
+    // Pattern 1: DRAGON STREAK (Jab Hash < 20 ho)
+    // Ye lagatar ek hi color dega
+    if (hashValue < 20) {
+        const isDragonBig = (Math.floor(last3 / 10) % 2 === 0);
         return {
             name: isDragonBig ? 'BIG' : 'SMALL',
             emoji: isDragonBig ? '🟢' : '🔴',
-            logic: 'Dragon Pattern 🐉 (Strong)'
+            logic: 'Dragon Streak 🐉 (Strong)'
         };
     }
-    
-    // Pattern 2: ZIG-ZAG PATTERN (Flip) 📉
-    // Ye tab chalega jab selector 1 hoga. (B-S-B-S chalega)
-    else if (patternSelector === 1) {
-        if (periodNum % 2 === 0) {
-            return { name: 'SMALL', emoji: '🔴', logic: 'Zig-Zag Pattern 📉' };
+
+    // Pattern 2: PING-PONG / ZIG-ZAG ( HASH 20 - 40)
+    // Big-Small-Big-Small
+    else if (hashValue >= 20 && hashValue < 40) {
+        if (lastDigit % 2 === 0) {
+            return { name: 'SMALL', emoji: '🔴', logic: 'Ping-Pong 🏓 (B-S-B-S)' };
         } else {
-            return { name: 'BIG', emoji: '🟢', logic: 'Zig-Zag Pattern 📉' };
+            return { name: 'BIG', emoji: '🟢', logic: 'Ping-Pong 🏓 (B-S-B-S)' };
         }
     }
-    
-    // Pattern 3: TWIN PATTERN (Double-Double) 👯
-    // Ye tab chalega jab selector 2 hoga. (BB-SS-BB-SS)
-    else if (patternSelector === 2) {
-        const remainder = periodNum % 4;
-        // 0,1 par SMALL | 2,3 par BIG
+
+    // Pattern 3: AAB PATTERN (2-1 Pattern) (HASH 40 - 60)
+    // Big-Big-Small pattern (Bohot common hai)
+    else if (hashValue >= 40 && hashValue < 60) {
+        const remainder = lastDigit % 3; 
+        // 0,1 = Big, 2 = Small
+        if (remainder === 2) {
+            return { name: 'SMALL', emoji: '🔴', logic: '2-1 Pattern 📊 (AAB)' };
+        } else {
+            return { name: 'BIG', emoji: '🟢', logic: '2-1 Pattern 📊 (AAB)' };
+        }
+    }
+
+    // Pattern 4: TWIN PATTERN (Double-Double) (HASH 60 - 80)
+    // Big-Big-Small-Small
+    else if (hashValue >= 60 && hashValue < 80) {
+        const remainder = lastDigit % 4;
         if (remainder === 0 || remainder === 1) {
-            return { name: 'SMALL', emoji: '🔴', logic: 'Twin Pattern 👯' };
+            return { name: 'SMALL', emoji: '🔴', logic: 'Twin Pattern 👯 (BBSS)' };
         } else {
-            return { name: 'BIG', emoji: '🟢', logic: 'Twin Pattern 👯' };
+            return { name: 'BIG', emoji: '🟢', logic: 'Twin Pattern 👯 (BBSS)' };
         }
     }
-    
-    // Pattern 4: TREND ANALYSIS (Random Mix) 📊
-    // Jab koi pattern clear na ho
+
+    // Pattern 5: 3-2-1 BREAKDOWN (HASH 80+)
+    // Jab trend tootne wala ho
     else {
-        const lastDigit = parseInt(period.slice(-1));
-        const sum = lastDigit + 7; // Secret Formula
-        
-        if (sum % 2 === 0) {
-            return { name: 'BIG', emoji: '🟢', logic: 'Trend Analysis 📊' };
+        // Complex modulo for randomizing 'Trend Break'
+        if ((last3 + hashValue) % 2 === 0) {
+             return { name: 'BIG', emoji: '🟢', logic: 'Trend Break 📉 (3-2-1)' };
         } else {
-            return { name: 'SMALL', emoji: '🔴', logic: 'Trend Analysis 📊' };
+             return { name: 'SMALL', emoji: '🔴', logic: 'Trend Break 📉 (3-2-1)' };
         }
     }
 }
@@ -116,7 +128,7 @@ setInterval(() => {
 🎯 *BET:* ${result.name} ${result.emoji}
 --------------------------------
 💡 *Logic:* ${result.logic}
-💰 *Use 3-Stage Funds Plan*
+💰 *Use 5-Stage Funds Plan*
         `;
 
         // Saare Channels Mein Bhejo
