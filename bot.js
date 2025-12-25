@@ -11,24 +11,28 @@ const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
 // ==========================================
-// 🔴 NEW: BDG EXACT SYNC PERIOD LOGIC
+// 🔴 NEW: BDG EXACT 17-DIGIT PERIOD LOGIC
 // ==========================================
 function getCurrentPeriod() {
     const now = new Date();
     
-    // BDG hamesha UTC Time use karta hai (India se 5:30 ghante peeche)
+    // 1. Date Part (YYYYMMDD) - 8 Digits
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const day = String(now.getUTCDate()).padStart(2, '0');
     
-    // Minute Calculation (00:00 se lekar abhi tak kitne minute hue)
+    // 2. Sequence Part (10001 se start hota hai)
+    // UTC Hours * 60 + UTC Minutes = Aaj ke total minute
     const totalMinutes = (now.getUTCHours() * 60) + now.getUTCMinutes();
     
-    // BDG Formula: 10001 + Minutes
-    // Example: 00:00 = 10001, 00:01 = 10002
-    const sequence = 10001 + totalMinutes;
-    
-    return `${year}${month}${day}${sequence}`;
+    // Example: Agar 00:00 baj raha hai to 10001
+    // Agar 00:01 baj raha hai to 10002
+    const sequence = 10001 + totalMinutes; 
+
+    // 3. FINAL FORMAT (17 DIGITS)
+    // Format: Date(8) + GameID(4) + Sequence(5)
+    // Example: 20251225 + 1000 + 10001 = 20251225100010001
+    return `${year}${month}${day}1000${sequence}`;
 }
 
 function getPrediction(periodNumber) {
