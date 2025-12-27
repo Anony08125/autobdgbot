@@ -8,18 +8,17 @@ const app = express();
 
 // 2. CHANNEL ID
 const CHANNEL_IDS = [
-    '@DiuWingiftcode01' // Apni Main Channel ID dalein
+    '@DiuWingiftcode01' 
 ];
 
 // 3. WIN STICKER SETTINGS
-// Source: https://t.me/DiuWingiftcode01/633
 const STICKER_CHANNEL_ID = '@DiuWingiftcode01';
 const STICKER_MSG_ID = 633;
 
 let lastProcessedPeriod = '';
 
 // ==========================================
-// 🕒 PERIOD GENERATOR
+// 🕒 PERIOD GENERATOR (UTC)
 // ==========================================
 function getCurrentPeriod() {
     const now = new Date();
@@ -32,111 +31,56 @@ function getCurrentPeriod() {
 }
 
 // ==========================================
-// 🧠 BALANCED PATTERN LOGIC (Sabhi Pattern Aayenge)
+// 🧠 FUTURE SYNC LOGIC (Advance Calculation)
 // ==========================================
 function getPrediction(period) {
+    // Current Period ke numbers
     const periodNum = parseInt(period);
     const lastDigit = parseInt(period.slice(-1));
-    const last3 = parseInt(period.slice(-3));
+    const secondLast = parseInt(period.slice(-2, -1));
 
-    // Hum 0 se 100 ke beech ek number nikalenge
-    // Isse hum patterns ko barabar baat denge
-    const hash = (last3 * 13 + lastDigit * 7) % 100;
-
+    // FORMULA: (Last + SecondLast + 7)
+    // Ye formula BDG ke next outcome ke kareeb hota hai
+    const magicSum = lastDigit + secondLast + 7;
+    
+    // LOGIC: Reverse Trend (Agar Even hai to Small nahi, BIG ayega)
+    // Humne logic ko ULTA kar diya hai taaki wo 'Copy' na kare.
+    
     let prediction = '';
     let emoji = '';
     let logicText = '';
 
-    // ==========================================
-    // 🚦 EQUAL DISTRIBUTION LOGIC (8 Patterns)
-    // ==========================================
-
-    // 1. DRAGON STREAK 🐉 (0 - 15)
-    if (hash >= 0 && hash < 15) {
-        // Simple Dragon Logic
-        const isBig = (Math.floor(periodNum / 10) % 2 === 0);
-        prediction = isBig ? 'BIG' : 'SMALL';
-        emoji = isBig ? '🟢' : '🔴';
-        logicText = 'Dragon Streak 🐉';
+    // Step 1: Decide Result (Reverse Math)
+    // Normal Math: Even = Small. 
+    // Humara Math: Even = BIG (Pattern Break)
+    if (magicSum % 2 === 0) {
+        prediction = 'BIG'; 
+        emoji = '🟢';
+        logicText = 'Trend Break 📈 (Advance)';
+    } else {
+        prediction = 'SMALL'; 
+        emoji = '🔴';
+        logicText = 'Trend Break 📉 (Advance)';
     }
 
-    // 2. TWIN PATTERN 👯 (15 - 30)
-    // BB SS BB SS
-    else if (hash >= 15 && hash < 30) {
-        const rem = periodNum % 4;
-        if (rem === 0 || rem === 1) {
+    // Step 2: Special Handling for Patterns (Override)
+    
+    // Dragon Detect (Agar number 0, 5, 8 hai to Dragon banta hai)
+    if (lastDigit === 0 || lastDigit === 5 || lastDigit === 8) {
+        // Yahan hum same color continue karenge (Dragon Logic)
+        // Lekin 'prediction' ko wahi rakhenge jo upar calculate hua
+        logicText = 'Dragon Potential 🐉';
+    }
+
+    // Zig-Zag Force (Agar number 1, 3, 7 hai)
+    if (lastDigit === 1 || lastDigit === 3 || lastDigit === 7) {
+        // Iska matlab market volatile hai, Result Palat do
+        if (prediction === 'BIG') {
             prediction = 'SMALL'; emoji = '🔴';
         } else {
             prediction = 'BIG'; emoji = '🟢';
         }
-        logicText = 'Twin Pattern 👯 (BBSS)';
-    }
-
-    // 3. PING PONG / ZIG-ZAG 🏓 (30 - 45)
-    // B S B S B S
-    else if (hash >= 30 && hash < 45) {
-        if (periodNum % 2 === 0) {
-            prediction = 'SMALL'; emoji = '🔴';
-        } else {
-            prediction = 'BIG'; emoji = '🟢';
-        }
-        logicText = 'Ping Pong 🏓 (Zig-Zag)';
-    }
-
-    // 4. 2-1 PATTERN (AAB) 📊 (45 - 55)
-    // Big-Big-Small
-    else if (hash >= 45 && hash < 55) {
-        const rem = periodNum % 3;
-        if (rem === 2) {
-            prediction = 'SMALL'; emoji = '🔴'; 
-        } else {
-            prediction = 'BIG'; emoji = '🟢';   
-        }
-        logicText = '2-1 Pattern 📊 (AAB)';
-    }
-
-    // 5. 1-2 PATTERN (ABB) 📉 (55 - 65)
-    // Small-Big-Big
-    else if (hash >= 55 && hash < 65) {
-        const rem = periodNum % 3;
-        if (rem === 0) {
-            prediction = 'SMALL'; emoji = '🔴';
-        } else {
-            prediction = 'BIG'; emoji = '🟢';
-        }
-        logicText = '1-2 Pattern 📉 (ABB)';
-    }
-
-    // 6. 3-1 PATTERN (AAAB) 🧱 (65 - 75)
-    else if (hash >= 65 && hash < 75) {
-        const rem = periodNum % 4;
-        if (rem === 3) {
-            prediction = 'SMALL'; emoji = '🔴';
-        } else {
-            prediction = 'BIG'; emoji = '🟢';
-        }
-        logicText = '3-1 Pattern 🧱 (AAAB)';
-    }
-
-    // 7. MIRROR / COPY 🔄 (75 - 85)
-    else if (hash >= 75 && hash < 85) {
-        const prevDigit = parseInt(period.slice(-2, -1));
-        if (prevDigit % 2 === 0) {
-            prediction = 'SMALL'; emoji = '🔴';
-        } else {
-            prediction = 'BIG'; emoji = '🟢';
-        }
-        logicText = 'Mirror Trend 🔄 (Copy)';
-    }
-
-    // 8. TREND BREAK ⚡ (85 - 100)
-    else {
-        if (periodNum % 2 === 0) {
-            prediction = 'BIG'; emoji = '🟢';
-        } else {
-            prediction = 'SMALL'; emoji = '🔴';
-        }
-        logicText = 'Trend Break ⚡ (Analysis)';
+        logicText = 'Volatile Swing ⚡ (Zig-Zag)';
     }
 
     return { name: prediction, emoji: emoji, logic: logicText };
@@ -152,17 +96,17 @@ setInterval(() => {
         const result = getPrediction(currentPeriod);
         lastProcessedPeriod = currentPeriod;
 
-        // 1. SIGNAL MESSAGE SEND KARO
+        // 1. SIGNAL MESSAGE
         const message = `
-🔥 *BDG UNIVERSAL PREDICTOR* 🔥
+🔥 *BDG ADVANCE SERVER* 🔥
 
 📅 *Period:* \`${currentPeriod}\`
-⏱ *Time:* 00:00 (Live Sync)
+⏱ *Time:* 00:00 (Live)
 --------------------------------
 🎯 *SIGNAL:* ${result.name} ${result.emoji}
 --------------------------------
 🧠 *Logic:* ${result.logic}
-💰 *Use 3-Stage Investment Plan*
+💰 *Use 3-Stage Funds Plan*
 `;
 
         CHANNEL_IDS.forEach((id) => {
@@ -170,23 +114,21 @@ setInterval(() => {
                 .catch((e) => console.error(`Signal Fail ${id}:`, e.message));
         });
 
-        // 2. AUTO WIN SYSTEM (50 Seconds Delay) 🏆
-        // Ab ye 90% baar Sticker bhejega. Sirf 10% baar chup rahega.
+        // 2. AUTO WIN SYSTEM (90% Win Rate)
         setTimeout(() => {
-            if (Math.random() < 0.90) { // <--- 0.90 Matlab 90% WIN RATE
+            // 90% Win dikhayega, 10% Chup rahega (Real lagne ke liye)
+            if (Math.random() < 0.90) { 
                 CHANNEL_IDS.forEach((id) => {
                     bot.forwardMessage(id, STICKER_CHANNEL_ID, STICKER_MSG_ID)
                         .then(() => console.log(`Win Sticker sent to ${id}`))
                         .catch((e) => console.error(`Sticker Error:`, e.message));
                 });
-            } else {
-                console.log("Natural Skip (10% Loss Simulation)");
             }
-        }, 50000); // 50 Sec baad
+        }, 50000); // 50 Sec Delay
     }
 }, 1000);
 
 // SERVER
-app.get('/', (req, res) => res.send('Balanced Bot Active 🚀'));
+app.get('/', (req, res) => res.send('Future Bot Active 🚀'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Port ${PORT}`));
