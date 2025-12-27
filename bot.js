@@ -2,13 +2,13 @@ const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
 // 1. APNA TOKEN YAHAN DALEIN
-const token = 'YOUR_TELEGRAM_BOT_TOKEN'; 
+const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY'; 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
 // 2. CHANNEL ID
 const CHANNEL_IDS = [
-    '-100xxxxxxxxx' // Apni Main Channel ID dalein
+    '@DiuWingiftcode01' // Apni Main Channel ID dalein
 ];
 
 // 3. WIN STICKER SETTINGS
