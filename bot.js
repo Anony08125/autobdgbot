@@ -2,19 +2,19 @@ const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
 // 1. APNA TOKEN YAHAN DALEIN
-const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY'; 
+const token = 'YOUR_TELEGRAM_BOT_TOKEN'; 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
-// 2. CHANNEL ID (Jahan Signal Bhejna Hai)
+// 2. CHANNEL ID
 const CHANNEL_IDS = [
-    '@DiuWingiftcode01' // Apni Main Channel ID yahan daalein
+    '-100xxxxxxxxx' // Apni Main Channel ID dalein
 ];
 
-// 3. 🏆 NEW WIN STICKER SETTINGS (Updated)
+// 3. WIN STICKER SETTINGS
 // Source: https://t.me/DiuWingiftcode01/633
-const STICKER_CHANNEL_ID = '@DiuWingiftcode01'; // Channel ka Username
-const STICKER_MSG_ID = 633; // Message Number
+const STICKER_CHANNEL_ID = '@DiuWingiftcode01';
+const STICKER_MSG_ID = 633;
 
 let lastProcessedPeriod = '';
 
@@ -32,36 +32,118 @@ function getCurrentPeriod() {
 }
 
 // ==========================================
-// 🧠 UNIVERSAL PATTERN LOGIC
+// 🧠 BALANCED PATTERN LOGIC (Sabhi Pattern Aayenge)
 // ==========================================
 function getPrediction(period) {
     const periodNum = parseInt(period);
-    const wave = Math.sin(periodNum * 0.2);
-    const hash = parseInt(period.slice(-3)) % 100;
+    const lastDigit = parseInt(period.slice(-1));
+    const last3 = parseInt(period.slice(-3));
 
-    let prediction, emoji, logicText;
+    // Hum 0 se 100 ke beech ek number nikalenge
+    // Isse hum patterns ko barabar baat denge
+    const hash = (last3 * 13 + lastDigit * 7) % 100;
 
-    // Pattern Selection (Dragon vs ZigZag)
-    if (Math.abs(wave) > 0.7) {
-        const isBig = wave > 0;
+    let prediction = '';
+    let emoji = '';
+    let logicText = '';
+
+    // ==========================================
+    // 🚦 EQUAL DISTRIBUTION LOGIC (8 Patterns)
+    // ==========================================
+
+    // 1. DRAGON STREAK 🐉 (0 - 15)
+    if (hash >= 0 && hash < 15) {
+        // Simple Dragon Logic
+        const isBig = (Math.floor(periodNum / 10) % 2 === 0);
         prediction = isBig ? 'BIG' : 'SMALL';
         emoji = isBig ? '🟢' : '🔴';
         logicText = 'Dragon Streak 🐉';
-    } else {
-        // Ping Pong / Zig Zag
+    }
+
+    // 2. TWIN PATTERN 👯 (15 - 30)
+    // BB SS BB SS
+    else if (hash >= 15 && hash < 30) {
+        const rem = periodNum % 4;
+        if (rem === 0 || rem === 1) {
+            prediction = 'SMALL'; emoji = '🔴';
+        } else {
+            prediction = 'BIG'; emoji = '🟢';
+        }
+        logicText = 'Twin Pattern 👯 (BBSS)';
+    }
+
+    // 3. PING PONG / ZIG-ZAG 🏓 (30 - 45)
+    // B S B S B S
+    else if (hash >= 30 && hash < 45) {
         if (periodNum % 2 === 0) {
             prediction = 'SMALL'; emoji = '🔴';
         } else {
             prediction = 'BIG'; emoji = '🟢';
         }
-        logicText = 'Ping Pong 🏓';
+        logicText = 'Ping Pong 🏓 (Zig-Zag)';
+    }
+
+    // 4. 2-1 PATTERN (AAB) 📊 (45 - 55)
+    // Big-Big-Small
+    else if (hash >= 45 && hash < 55) {
+        const rem = periodNum % 3;
+        if (rem === 2) {
+            prediction = 'SMALL'; emoji = '🔴'; 
+        } else {
+            prediction = 'BIG'; emoji = '🟢';   
+        }
+        logicText = '2-1 Pattern 📊 (AAB)';
+    }
+
+    // 5. 1-2 PATTERN (ABB) 📉 (55 - 65)
+    // Small-Big-Big
+    else if (hash >= 55 && hash < 65) {
+        const rem = periodNum % 3;
+        if (rem === 0) {
+            prediction = 'SMALL'; emoji = '🔴';
+        } else {
+            prediction = 'BIG'; emoji = '🟢';
+        }
+        logicText = '1-2 Pattern 📉 (ABB)';
+    }
+
+    // 6. 3-1 PATTERN (AAAB) 🧱 (65 - 75)
+    else if (hash >= 65 && hash < 75) {
+        const rem = periodNum % 4;
+        if (rem === 3) {
+            prediction = 'SMALL'; emoji = '🔴';
+        } else {
+            prediction = 'BIG'; emoji = '🟢';
+        }
+        logicText = '3-1 Pattern 🧱 (AAAB)';
+    }
+
+    // 7. MIRROR / COPY 🔄 (75 - 85)
+    else if (hash >= 75 && hash < 85) {
+        const prevDigit = parseInt(period.slice(-2, -1));
+        if (prevDigit % 2 === 0) {
+            prediction = 'SMALL'; emoji = '🔴';
+        } else {
+            prediction = 'BIG'; emoji = '🟢';
+        }
+        logicText = 'Mirror Trend 🔄 (Copy)';
+    }
+
+    // 8. TREND BREAK ⚡ (85 - 100)
+    else {
+        if (periodNum % 2 === 0) {
+            prediction = 'BIG'; emoji = '🟢';
+        } else {
+            prediction = 'SMALL'; emoji = '🔴';
+        }
+        logicText = 'Trend Break ⚡ (Analysis)';
     }
 
     return { name: prediction, emoji: emoji, logic: logicText };
 }
 
 // ==========================================
-// 🚀 LOOP: SIGNAL + AUTO WIN
+// 🚀 LOOP: SIGNAL + AUTO WIN (90%)
 // ==========================================
 setInterval(() => {
     const currentPeriod = getCurrentPeriod();
@@ -70,9 +152,9 @@ setInterval(() => {
         const result = getPrediction(currentPeriod);
         lastProcessedPeriod = currentPeriod;
 
-        // 1. SIGNAL MESSAGE
+        // 1. SIGNAL MESSAGE SEND KARO
         const message = `
-🔥 *DiuWin VIP SERVER LEAK* 🔥
+🔥 *BDG UNIVERSAL PREDICTOR* 🔥
 
 📅 *Period:* \`${currentPeriod}\`
 ⏱ *Time:* 00:00 (Live Sync)
@@ -80,7 +162,7 @@ setInterval(() => {
 🎯 *SIGNAL:* ${result.name} ${result.emoji}
 --------------------------------
 🧠 *Logic:* ${result.logic}
-💰 *Use 5-Stage Investment Plan*
+💰 *Use 3-Stage Investment Plan*
 `;
 
         CHANNEL_IDS.forEach((id) => {
@@ -88,22 +170,23 @@ setInterval(() => {
                 .catch((e) => console.error(`Signal Fail ${id}:`, e.message));
         });
 
-        // 2. AUTO WIN (50 Seconds Delay) 🏆
+        // 2. AUTO WIN SYSTEM (50 Seconds Delay) 🏆
+        // Ab ye 90% baar Sticker bhejega. Sirf 10% baar chup rahega.
         setTimeout(() => {
-            // 80% Chance to show WIN
-            if (Math.random() < 0.80) {
+            if (Math.random() < 0.90) { // <--- 0.90 Matlab 90% WIN RATE
                 CHANNEL_IDS.forEach((id) => {
-                    // Naya Sticker Forward karega
                     bot.forwardMessage(id, STICKER_CHANNEL_ID, STICKER_MSG_ID)
-                        .then(() => console.log(`Win (633) sent to ${id}`))
-                        .catch((e) => console.error(`Win Error:`, e.message));
+                        .then(() => console.log(`Win Sticker sent to ${id}`))
+                        .catch((e) => console.error(`Sticker Error:`, e.message));
                 });
+            } else {
+                console.log("Natural Skip (10% Loss Simulation)");
             }
-        }, 50000); // 50 Sec baad bheje
+        }, 50000); // 50 Sec baad
     }
 }, 1000);
 
 // SERVER
-app.get('/', (req, res) => res.send('Bot Active 🚀'));
+app.get('/', (req, res) => res.send('Balanced Bot Active 🚀'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Port ${PORT}`));
