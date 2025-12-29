@@ -165,4 +165,16 @@ setInterval(checkGameStatus, 5000);
 // Server Keep-Alive
 app.get('/', (req, res) => res.send('Real API Bot Running 🚀'));
 const PORT = process.env.PORT || 10000;
+
+// ==========================================
+// 🔋 KEEP-ALIVE SYSTEM (No Sleep)
+// ==========================================
+// Har 10 minute mein khud ko Ping karega
+setInterval(() => {
+    // Note: 'http://localhost:10000' Render ke andar khud ka address hai
+    axios.get('http://localhost:10000')
+        .then(() => console.log('🔋 Ping: Keeping bot awake'))
+        .catch((e) => console.error('Ping Error (Ignore):', e.message));
+}, 600000); // 600000 ms = 10 Minutes
+
 app.listen(PORT, () => console.log(`Server running on Port ${PORT}`));
