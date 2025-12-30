@@ -3,7 +3,7 @@ const express = require('express');
 const axios = require('axios'); // Ye ab chalega kyunki package.json update ho gaya hai
 
 // 1. APNA TOKEN YAHAN DALEIN
-const token = '7970364882:AAGhYmvIHU9SPqkYs3SeZlUpuL-I_ngXEkY'; 
+const token = '8526706143:AAFZN8-HWX-PNEjGaXikFYDtnT-I9UtD1IA'; 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
