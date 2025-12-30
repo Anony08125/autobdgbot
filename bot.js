@@ -1,22 +1,24 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
-const axios = require('axios'); // Ye ab chalega kyunki package.json update ho gaya hai
+const axios = require('axios');
 
-// 1. APNA TOKEN YAHAN DALEIN
-const token = '8526706143:AAFZN8-HWX-PNEjGaXikFYDtnT-I9UtD1IA'; 
+// ==========================================
+// ⚙️ SETTINGS (Yahan Apni Details Dalein)
+// ==========================================
+const token = '8526706143:AAFZN8-HWX-PNEjGaXikFYDtnT-I9UtD1IA'; // Apna Bot Token Dalein
 const bot = new TelegramBot(token, { polling: true });
+
+// Channel jahan Signal jayega
+const CHANNEL_ID = '@DiuWingiftcode01'; // Apni Channel ID
+
+// Win hone par jo Sticker jayega
+const STICKER_ID = 'https://t.me/DiuWingiftcode01/11491'; // Sticker ka File ID yahan dalein (Forward mat karein, ID use karein)
+// Note: Agar File ID nahi hai to user context wala forward logic niche hai
+
 const app = express();
+const port = process.env.PORT || 10000;
 
-// 2. CHANNEL ID
-const CHANNEL_IDS = [
-    '@DiuWingiftcode01' // Apni Channel ID Dalein
-];
-
-// 3. WIN STICKER SETTINGS
-const STICKER_CHANNEL_ID = '@DiuWingiftcode01';
-const STICKER_MSG_ID = 633;
-
-// 4. REAL API SETTINGS (Aapki Mehnat)
+// API URL & HEADERS
 const BDG_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 const HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
@@ -25,156 +27,158 @@ const HEADERS = {
 };
 
 // GLOBAL VARIABLES
-let lastProcessedPeriod = ''; 
+let lastProcessedPeriod = null; 
 let myLastPrediction = null; 
 
-// Helpers
+// ==========================================
+// 🧠 LOGIC FUNCTIONS
+// ==========================================
+
+// Number se Big/Small nikalna
 function getSize(number) {
     return parseInt(number) >= 5 ? 'BIG' : 'SMALL';
 }
-function getEmoji(size) {
-    return size === 'BIG' ? '🟢' : '🔴';
+
+// Prediction Logic (Same as Python Script)
+function calculatePrediction(history) {
+    const last1 = getSize(history[0].number);
+    const last2 = getSize(history[1].number);
+    const last3 = getSize(history[2].number);
+
+    let prediction = '';
+    let logicText = '';
+
+    // Logic 1: Dragon (Teen baar same aaya)
+    if (last1 === last2 && last2 === last3) {
+        prediction = last1;
+        logicText = `Dragon Pattern 🐉 (${last1} Trend)`;
+    }
+    // Logic 2: Zig-Zag (Teen baar alag)
+    else if (last1 !== last2 && last2 !== last3) {
+        prediction = last2; // Pattern follow flip
+        logicText = 'Zig-Zag Pattern 🏓';
+    }
+    // Logic 3: Reverse (Default)
+    else {
+        prediction = last1 === 'BIG' ? 'SMALL' : 'BIG';
+        logicText = 'Reverse Trend 📉';
+    }
+
+    return { prediction, logicText };
 }
 
 // ==========================================
-// 🛡️ ANTI-CRASH SYSTEM (Bot kabhi nahi marega)
-// ==========================================
-process.on('uncaughtException', (err) => {
-    console.log('⚠️ Error pakda gaya: ' + err);
-});
-process.on('unhandledRejection', (reason, p) => {
-    console.log('⚠️ Error rejection:', reason);
-});
-
-// ==========================================
-// 📡 REAL DATA CHECK FUNCTION
+// 📡 MAIN LOOP FUNCTION
 // ==========================================
 async function checkGameStatus() {
     try {
         const timestamp = Date.now();
         
-        // 1. API Call (Real Data Fetch)
-        // console.log("Connecting to BDG Server..."); // Logs me dikhega
-        
+        // 1. Fetch Real Data
         const response = await axios.get(BDG_URL, {
             headers: HEADERS,
             params: {
                 no: "1", size: "10", type: "1", id: "1",
                 language: "en", random: "4f3d2a1b", ts: timestamp
             },
-            timeout: 5000 // 5 second se zyada wait nahi karega
+            timeout: 5000
         });
 
         const data = response.data;
-        
-        // Data Verification
-        if (!data || !data.data || !data.data.list) {
-            console.log("❌ API se data nahi mila, Retrying...");
-            return;
-        }
+        if (!data || !data.data || !data.data.list) return;
 
         const history = data.data.list;
         const latestResult = history[0]; 
-        const currentPeriod = String(parseInt(latestResult.issueNumber) + 1);
+        
+        // Latest result ka period number
+        const currentResultPeriod = latestResult.issueNumber;
+        
+        // Agla period jiska signal dena hai
+        const nextPeriod = String(parseInt(currentResultPeriod) + 1);
 
-        // ==========================================
-        // 🏆 STEP 1: WIN CHECK (Real verification)
-        // ==========================================
-        if (myLastPrediction && myLastPrediction.period === latestResult.issueNumber) {
+        // ------------------------------------------
+        // 1️⃣ WIN CHECK (Pichle Signal ka kya hua?)
+        // ------------------------------------------
+        if (myLastPrediction && myLastPrediction.period === currentResultPeriod) {
             const actualResult = getSize(latestResult.number);
             
-            console.log(`🔎 Checking: Humne Bola ${myLastPrediction.bet} | Aaya: ${actualResult}`);
+            console.log(`🔎 Check: Humne bola ${myLastPrediction.bet} | Aaya ${actualResult}`);
 
             if (myLastPrediction.bet === actualResult) {
-                // JEET GAYE! Sticker Forward
-                CHANNEL_IDS.forEach((id) => {
-                    bot.forwardMessage(id, STICKER_CHANNEL_ID, STICKER_MSG_ID)
-                        .then(() => console.log(`✅ WIN Sticker Sent to ${id}`))
-                        .catch((e) => console.error(e.message));
-                });
+                // ✅ WIN: Sticker Bhejo
+                console.log("✅ WIN! Sending Sticker...");
+                
+                // Sticker File ID method (Recommended)
+                // bot.sendSticker(CHANNEL_ID, STICKER_ID);
+
+                // YA Forward method (Jo aapne pehle use kiya tha)
+                 bot.forwardMessage(CHANNEL_ID, '@DiuWingiftcode01', 633)
+                    .catch(e => console.log("Sticker Error: " + e.message));
+
             } else {
-                console.log("❌ Loss hua. Sticker nahi bhejunga.");
+                // ❌ LOSS: Kuch mat bhejo (Silent)
+                console.log("❌ LOSS. Silent Mode.");
             }
-            myLastPrediction = null; // Reset
+
+            // Reset kar do taki baar baar check na ho
+            myLastPrediction = null; 
         }
 
-        // ==========================================
-        // 🔮 STEP 2: NEW PREDICTION
-        // ==========================================
-        if (currentPeriod !== lastProcessedPeriod) {
-            lastProcessedPeriod = currentPeriod;
+        // ------------------------------------------
+        // 2️⃣ NEW PREDICTION (Agar naya period shuru hua hai)
+        // ------------------------------------------
+        if (lastProcessedPeriod !== nextPeriod) {
+            lastProcessedPeriod = nextPeriod;
 
-            // Python Logic Conversion
-            const last1 = getSize(history[0].number);
-            const last2 = getSize(history[1].number);
-            const last3 = getSize(history[2].number);
+            // Logic Calculate karo
+            const { prediction, logicText } = calculatePrediction(history);
 
-            let prediction = '';
-            let logicText = '';
-
-            // Logic 1: Dragon (Agar teeno same hain)
-            if (last1 === last2 && last2 === last3) {
-                prediction = last1;
-                logicText = `Dragon Pattern 🐉 (${last1} Trend)`;
-            }
-            // Logic 2: Zig-Zag (Agar teeno alag pattern hain)
-            else if (last1 !== last2 && last2 !== last3) {
-                prediction = last2; // Follow the flip
-                logicText = 'Zig-Zag Pattern 🏓';
-            }
-            // Logic 3: Trend Break (Reverse)
-            else {
-                prediction = last1 === 'BIG' ? 'SMALL' : 'BIG';
-                logicText = 'Trend Break / Reverse 📉';
-            }
-
-            // Save Prediction
+            // Save karo future checking ke liye
             myLastPrediction = {
-                period: currentPeriod,
+                period: nextPeriod,
                 bet: prediction
             };
 
-            const message = `
-🔥 *BDG API LIVE PREDICTOR* 🔥
+            const emoji = prediction === 'BIG' ? '🟢' : '🔴';
 
-📅 *Period:* \`${currentPeriod}\`
-📡 *Source:* Official API (Real-Time)
---------------------------------
-🎯 *SIGNAL:* ${prediction} ${getEmoji(prediction)}
---------------------------------
+            const message = `
+🔥 *BDG VIP PREDICTION* 🔥
+
+📅 *Period:* \`${nextPeriod}\`
+🎰 *Bet:* *${prediction}* ${emoji}
+-----------------------------
 🧠 *Logic:* ${logicText}
-💰 *Use 3-Stage Funds Plan*
+💰 *Maintain Level 3-5 Funds*
 `;
 
-            CHANNEL_IDS.forEach((id) => {
-                bot.sendMessage(id, message, { parse_mode: 'Markdown' })
-                    .then(() => console.log(`Signal sent for ${currentPeriod}`))
-                    .catch((e) => console.error(e.message));
-            });
+            // Message Bhejo
+            bot.sendMessage(CHANNEL_ID, message, { parse_mode: 'Markdown' })
+                .then(() => console.log(`Signal Sent: ${nextPeriod}`))
+                .catch((e) => console.error(e.message));
         }
 
     } catch (error) {
-        // Agar API block kare ya error aaye, to bot band nahi hoga
-        console.error("⚠️ API Error (Retrying in 5s):", error.message);
+        console.error("API Error (Retrying...):", error.message);
     }
 }
 
-// Loop: Har 5 second check karega
+// Har 5 second mein check karo
 setInterval(checkGameStatus, 5000);
 
-// Server Keep-Alive
-app.get('/', (req, res) => res.send('Real API Bot Running 🚀'));
-const PORT = process.env.PORT || 10000;
+// ==========================================
+// 🛡️ SERVER & KEEP ALIVE (Render ke liye zaroori)
+// ==========================================
+app.get('/', (req, res) => {
+    res.send('Bot is Running Smoothly 🚀');
+});
 
-// ==========================================
-// 🔋 KEEP-ALIVE SYSTEM (No Sleep)
-// ==========================================
-// Har 10 minute mein khud ko Ping karega
+// Self Ping Logic (Taki bot so na jaye)
 setInterval(() => {
-    // Note: 'http://localhost:10000' Render ke andar khud ka address hai
-    axios.get('http://localhost:10000')
-        .then(() => console.log('🔋 Ping: Keeping bot awake'))
-        .catch((e) => console.error('Ping Error (Ignore):', e.message));
-}, 600000); // 600000 ms = 10 Minutes
+    axios.get(`http://localhost:${port}`)
+        .then(() => console.log('🔋 Keep-Alive Ping'))
+        .catch(() => {});
+}, 600000); // 10 Minutes
 
-app.listen(PORT, () => console.log(`Server running on Port ${PORT}`));
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
