@@ -1,184 +1,161 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
-const axios = require('axios');
+const axios = require('axios'); 
 
 // ==========================================
-// ⚙️ SETTINGS (Yahan Apni Details Dalein)
+// 1. APNA TOKEN YAHAN DALEIN
 // ==========================================
-const token = '8526706143:AAFZN8-HWX-PNEjGaXikFYDtnT-I9UtD1IA'; // Apna Bot Token Dalein
+const token = 'YOUR_NEW_TOKEN_HERE'; 
 const bot = new TelegramBot(token, { polling: true });
-
-// Channel jahan Signal jayega
-const CHANNEL_ID = '@DiuWingiftcode01'; // Apni Channel ID
-
-// Win hone par jo Sticker jayega
-const STICKER_ID = 'https://t.me/DiuWingiftcode01/11491'; // Sticker ka File ID yahan dalein (Forward mat karein, ID use karein)
-// Note: Agar File ID nahi hai to user context wala forward logic niche hai
-
 const app = express();
-const port = process.env.PORT || 10000;
 
-// API URL & HEADERS
+// 2. APNI CHANNEL ID
+const CHANNEL_IDS = [
+    '-100xxxxxxxxx' // Apni Channel ID Sahi Dalein
+];
+
+// 3. NEW STICKER SETTINGS (Updated)
+// Link: https://t.me/DiuWingiftcode01/11499
+const STICKER_CHANNEL_ID = '@DiuWingiftcode01'; 
+const STICKER_MSG_ID = 11499;
+
+// 4. REAL API SETTINGS
 const BDG_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 const HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     "Referer": "https://bdggame7.com/",
     "Origin": "https://bdggame7.com"
 };
 
-// GLOBAL VARIABLES
-let lastProcessedPeriod = null; 
+// GLOBAL MEMORY
+let lastProcessedPeriod = ''; 
 let myLastPrediction = null; 
 
-// ==========================================
-// 🧠 LOGIC FUNCTIONS
-// ==========================================
-
-// Number se Big/Small nikalna
+// Helpers
 function getSize(number) {
     return parseInt(number) >= 5 ? 'BIG' : 'SMALL';
 }
-
-// Prediction Logic (Same as Python Script)
-function calculatePrediction(history) {
-    const last1 = getSize(history[0].number);
-    const last2 = getSize(history[1].number);
-    const last3 = getSize(history[2].number);
-
-    let prediction = '';
-    let logicText = '';
-
-    // Logic 1: Dragon (Teen baar same aaya)
-    if (last1 === last2 && last2 === last3) {
-        prediction = last1;
-        logicText = `Dragon Pattern 🐉 (${last1} Trend)`;
-    }
-    // Logic 2: Zig-Zag (Teen baar alag)
-    else if (last1 !== last2 && last2 !== last3) {
-        prediction = last2; // Pattern follow flip
-        logicText = 'Zig-Zag Pattern 🏓';
-    }
-    // Logic 3: Reverse (Default)
-    else {
-        prediction = last1 === 'BIG' ? 'SMALL' : 'BIG';
-        logicText = 'Reverse Trend 📉';
-    }
-
-    return { prediction, logicText };
+function getEmoji(size) {
+    return size === 'BIG' ? '🟢' : '🔴';
 }
 
+// Error Handler
+bot.on('polling_error', (error) => {
+    if (error.code === 'ETELEGRAM' && error.message.includes('409')) {
+        console.log("⚠️ ERROR: Computer wala bot abhi bhi chal raha hai! Use band karo.");
+    } else {
+        console.log(`Polling Error: ${error.message}`);
+    }
+});
+
 // ==========================================
-// 📡 MAIN LOOP FUNCTION
+// 📡 FAST CHECK FUNCTION
 // ==========================================
 async function checkGameStatus() {
     try {
         const timestamp = Date.now();
         
-        // 1. Fetch Real Data
+        // Fast API Call (3s Timeout)
         const response = await axios.get(BDG_URL, {
             headers: HEADERS,
             params: {
                 no: "1", size: "10", type: "1", id: "1",
                 language: "en", random: "4f3d2a1b", ts: timestamp
             },
-            timeout: 5000
+            timeout: 3000
         });
 
         const data = response.data;
-        if (!data || !data.data || !data.data.list) return;
+        if (!data || !data.data) return;
+        
+        const history = data.data.list || data.data.gameslist;
+        if (!history || history.length === 0) return;
 
-        const history = data.data.list;
         const latestResult = history[0]; 
-        
-        // Latest result ka period number
-        const currentResultPeriod = latestResult.issueNumber;
-        
-        // Agla period jiska signal dena hai
-        const nextPeriod = String(parseInt(currentResultPeriod) + 1);
+        const currentPeriod = (BigInt(latestResult.issueNumber) + 1n).toString();
 
-        // ------------------------------------------
-        // 1️⃣ WIN CHECK (Pichle Signal ka kya hua?)
-        // ------------------------------------------
-        if (myLastPrediction && myLastPrediction.period === currentResultPeriod) {
+        // ==========================================
+        // 🏆 WIN CHECK (STICKER IS BACK)
+        // ==========================================
+        if (myLastPrediction && myLastPrediction.period === latestResult.issueNumber) {
             const actualResult = getSize(latestResult.number);
             
-            console.log(`🔎 Check: Humne bola ${myLastPrediction.bet} | Aaya ${actualResult}`);
+            console.log(`🔎 Result: Predicted=${myLastPrediction.bet} | Actual=${actualResult}`);
 
             if (myLastPrediction.bet === actualResult) {
-                // ✅ WIN: Sticker Bhejo
-                console.log("✅ WIN! Sending Sticker...");
-                
-                // Sticker File ID method (Recommended)
-                // bot.sendSticker(CHANNEL_ID, STICKER_ID);
-
-                // YA Forward method (Jo aapne pehle use kiya tha)
-                 bot.forwardMessage(CHANNEL_ID, '@DiuWingiftcode01', 633)
-                    .catch(e => console.log("Sticker Error: " + e.message));
-
-            } else {
-                // ❌ LOSS: Kuch mat bhejo (Silent)
-                console.log("❌ LOSS. Silent Mode.");
+                // Jeetne par Sticker Bhejo
+                CHANNEL_IDS.forEach((id) => {
+                    bot.forwardMessage(id, STICKER_CHANNEL_ID, STICKER_MSG_ID)
+                        .then(() => console.log(`✅ Sticker Sent to ${id}`))
+                        .catch((e) => {
+                            console.error(`❌ Sticker Failed: ${e.message}`);
+                            // Agar Sticker fail ho, to Text bhej do (Backup)
+                            bot.sendMessage(id, "✅ *WIN WIN WIN!* 🏆", { parse_mode: 'Markdown' });
+                        });
+                });
             }
-
-            // Reset kar do taki baar baar check na ho
-            myLastPrediction = null; 
+            myLastPrediction = null;
         }
 
-        // ------------------------------------------
-        // 2️⃣ NEW PREDICTION (Agar naya period shuru hua hai)
-        // ------------------------------------------
-        if (lastProcessedPeriod !== nextPeriod) {
-            lastProcessedPeriod = nextPeriod;
+        // ==========================================
+        // 🔮 NEW PREDICTION (NO LOGIC TEXT)
+        // ==========================================
+        if (currentPeriod !== lastProcessedPeriod) {
+            console.log(`🔥 Sending Prediction for: ${currentPeriod}`);
+            lastProcessedPeriod = currentPeriod;
 
-            // Logic Calculate karo
-            const { prediction, logicText } = calculatePrediction(history);
+            const last1 = getSize(history[0].number);
+            const last2 = getSize(history[1].number);
+            const last3 = getSize(history[2].number);
 
-            // Save karo future checking ke liye
+            let prediction = '';
+
+            // Simple Pattern Logic (Internal Only)
+            if (last1 === last2 && last2 === last3) {
+                prediction = last1; 
+            } else if (last1 !== last2 && last2 !== last3) {
+                prediction = last2;
+            } else {
+                prediction = last1 === 'BIG' ? 'SMALL' : 'BIG';
+            }
+
             myLastPrediction = {
-                period: nextPeriod,
+                period: currentPeriod,
                 bet: prediction
             };
 
-            const emoji = prediction === 'BIG' ? '🟢' : '🔴';
-
+            // CLEAN MESSAGE (Logic Hata Diya)
             const message = `
-🔥 *BDG VIP PREDICTION* 🔥
+🔥 *BDG API LIVE* 🔥
 
-📅 *Period:* \`${nextPeriod}\`
-🎰 *Bet:* *${prediction}* ${emoji}
------------------------------
-🧠 *Logic:* ${logicText}
-💰 *Maintain Level 3-5 Funds*
+📅 *Period:* \`${currentPeriod}\`
+📡 *Source:* Real-Time Data
+--------------------------------
+🎯 *SIGNAL:* ${prediction} ${getEmoji(prediction)}
+--------------------------------
+💰 *Use 3-Stage Funds Plan*
 `;
 
-            // Message Bhejo
-            bot.sendMessage(CHANNEL_ID, message, { parse_mode: 'Markdown' })
-                .then(() => console.log(`Signal Sent: ${nextPeriod}`))
-                .catch((e) => console.error(e.message));
+            CHANNEL_IDS.forEach((id) => {
+                bot.sendMessage(id, message, { parse_mode: 'Markdown' })
+                    .catch((e) => console.error(e.message));
+            });
         }
 
     } catch (error) {
-        console.error("API Error (Retrying...):", error.message);
+        // Retry silently
     }
 }
 
-// Har 5 second mein check karo
-setInterval(checkGameStatus, 5000);
+// Loop Fast (2 Seconds)
+setInterval(checkGameStatus, 2000);
 
-// ==========================================
-// 🛡️ SERVER & KEEP ALIVE (Render ke liye zaroori)
-// ==========================================
-app.get('/', (req, res) => {
-    res.send('Bot is Running Smoothly 🚀');
-});
-
-// Self Ping Logic (Taki bot so na jaye)
+// Keep Alive
 setInterval(() => {
-    axios.get(`http://localhost:${port}`)
-        .then(() => console.log('🔋 Keep-Alive Ping'))
-        .catch(() => {});
-}, 600000); // 10 Minutes
+    axios.get('http://localhost:10000').catch(() => {});
+}, 600000);
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+// SERVER
+app.get('/', (req, res) => res.send('Clean Bot Running 🚀'));
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Running on Port ${PORT}`));
