@@ -5,13 +5,13 @@ const axios = require('axios');
 // ==========================================
 // 1. APNA TOKEN YAHAN DALEIN
 // ==========================================
-const token = 'YOUR_NEW_TOKEN_HERE'; 
+const token = '8526706143:AAFZN8-HWX-PNEjGaXikFYDtnT-I9UtD1IA'; 
 const bot = new TelegramBot(token, { polling: true });
 const app = express();
 
 // 2. APNI CHANNEL ID
 const CHANNEL_IDS = [
-    '-100xxxxxxxxx' // Apni Channel ID Sahi Dalein
+    '@DiuWingiftcode01' // Apni Channel ID Sahi Dalein
 ];
 
 // 3. NEW STICKER SETTINGS (Updated)
